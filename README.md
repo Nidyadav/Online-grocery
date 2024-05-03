@@ -11,34 +11,33 @@ sample post request:
  {
   "orderItems": [
         {
-       "name":"bread",
-      "quantity": 3,
-			"age":3
-
+        "name":"bread",
+       "quantity": 3,
+	"age":3
     },
     {
        "name":"vegetable",
-      
-			"weight":200.00
+       "weight":200.00
     },
-
-		    {
-     
-       "name":"Dutch beer",
+ {
+      "name":"Dutch beer",
       "quantity": 6,
-			"origin":"Dutch"
-   
-    }
+       "origin":"Dutch"
+ }
 
   ]
 }
+
 Response  in json for above request:
 Order details:
 3 x bread (3 days old): €2.00
 6 x Dutch beer: €1.00
 Total: €3.00
 Error Handling::
-Api to place order handles error scenarios like if bread older than six days added or if order with no items is placed.If any orderItem does not match (by name) with items in inventory ItemNotFound exception is thrown. 
+If bread older than six days added IllegalArgument Exception is thrown. 
+If order with no items is placed NotValidOrder exception is thrown.
+If any orderItem does not match (by name) with items in inventory ItemNotFound exception is thrown. 
 Testing::
 Various names can be used for testing(case sensitive):bread,vegetable,Dutch beer,German beer, Belgium beer.
-for bread need to specify age and quantity. for beer quantity and origin and for vegetable weight(floating point) should be specified(refer to sample post request above)
+For bread need to specify age and quantity. 
+For beer quantity and origin and for vegetable weight(floating point) should be specified(refer to sample post request above)
