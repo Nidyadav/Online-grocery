@@ -20,7 +20,7 @@ public class OrderService {
         this.itemRepository = itemRepository;
     }
 
-    public String processOrder(Order order) throws ItemNotFoundException ,NotValidOrderException{
+    public String processOrder(Order order) throws ItemNotFoundException ,NotValidOrderException,IllegalArgumentException{
         double totalPrice = 0.0;
         double discount = 0.0;
         if(order.getOrderItems().size()==0){
@@ -94,12 +94,12 @@ public class OrderService {
     private double calculateDiscountForBeer(OrderItem orderItem) {
         String origin = orderItem.getOrigin();
         int quantity = orderItem.getQuantity();
-        if (quantity >= 6 && origin.equals("Belgium")) {
-            return 3.0;
-        } else if (quantity >= 6 && origin.equals("Dutch")) {
-            return 2.0;
-        } else if (quantity >= 6 && origin.equals("German")) {
-            return 4.0;
+        if (quantity/6 >0 && origin.equals("Belgium")) {
+            return 3.0*(quantity/6);
+        } else if (quantity/6 >0 && origin.equals("Dutch")) {
+            return 2.0*(quantity/6);
+        } else if (quantity/6 >0 && origin.equals("German")) {
+            return 4.0*(quantity/6);
         } else {
             return 0.0;
         }

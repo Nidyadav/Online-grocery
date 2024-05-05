@@ -39,7 +39,7 @@ public class OrderServiceTest {
             vegetable = new Item("vegetable", 1.0, Item.ProductType.VEGETABLE);
             dutch_Beer = new Item("Dutch beer", 0.50, Item.ProductType.DUTCH_BEER);
             german_Beer = new Item("German beer", 1.0, Item.ProductType.GERMAN_BEER);
-            belgium_Beer = new Item("German beer", 0.75, Item.ProductType.BELGIUM_BEER);
+            belgium_Beer = new Item("Belgium beer", 0.75, Item.ProductType.BELGIUM_BEER);
             orderService = new OrderService(itemRepository);
             order = new Order(orderItems);
         }
@@ -160,6 +160,19 @@ public class OrderServiceTest {
             assertEquals(expectedReceipt, actualReceipt);
         }
         @Test
+        void givenOrderWithTwelveBelgiumBeersItemsDiscountShouldApply() {
+            OrderItem belgiumBeer = new OrderItem("Belgium beer", 12, "Belgium");
+            orderItems.add(belgiumBeer);
+            Mockito.when(itemRepository.findByName(belgiumBeer.getName())).thenReturn(Optional.of(belgium_Beer));
+            String actualReceipt = orderService.processOrder(order);
+            String expectedReceipt = """
+                    Order details:
+                    12 x Belgium beer: €3.00
+                    Total: €3.00
+                    """;
+            assertEquals(expectedReceipt, actualReceipt);
+        }
+        @Test
         void givenOrderWithSixDutchBeersAsSeparateOrderItemsDiscountShouldApply() {
             Mockito.when(orderItem1.getName()).thenReturn("Dutch beer");
             Mockito.when(orderItem1.getQuantity()).thenReturn(1);
@@ -217,7 +230,7 @@ public class OrderServiceTest {
             assertEquals(expectedReceipt, actualReceipt);
         }
         @Test
-        void givenOrderWithThreeBelgiumBeersAsSeparateOrderItemsTwiceDiscountShouldApply() {
+        void givenOrderWithThreeBelgiumBeersTwiceAsSeparateOrderItemsDiscountShouldApply() {
             OrderItem belgiumBeer = new OrderItem("Belgium beer", 3, "Belgium");
             OrderItem belgiumBeer_again = new OrderItem("Belgium beer", 3, "Belgium");
             orderItems.add(belgiumBeer_again);

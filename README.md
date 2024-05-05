@@ -39,6 +39,6 @@ Error Handling::
 3. If any orderItem does not match (by name) with items in inventory ItemNotFound exception is thrown. 
 
 Testing::
-1. Various names can be used for testing(case sensitive):bread,vegetable,Dutch beer,German beer, Belgium beer.
+1. Various names should be used for testing(case sensitive):bread,vegetable,Dutch beer,German beer, Belgium beer.
 2. For bread need to specify age and quantity. 
-3. For beer quantity and origin and for vegetable weight(floating point) should be specified(refer to sample post request above)
+3. For beer quantity and origin and for vegetable weight(in decimal) should be specified.(refer to sample post request above)
