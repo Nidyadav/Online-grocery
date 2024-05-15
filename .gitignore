@@ -18,6 +18,7 @@ bin/
 
 ### IntelliJ IDEA ###
 .gradle
+.gradlew
 .idea
 *.iws
 *.iml
