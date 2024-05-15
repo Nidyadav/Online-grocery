@@ -16,11 +16,11 @@ public class OrderItem {
     private double price;
     private double discount;
     @Nullable
-    private int age;
+    private Integer age;
     @Nullable
     private String origin;
     @Nullable
-    private double weight;
+    private Double weight;
     @ManyToOne
     @JoinColumn(name = "itemId")
     @Cascade(org.hibernate.annotations.CascadeType.PERSIST)
@@ -108,7 +108,7 @@ public class OrderItem {
         this.order = order;
     }
 
-    public int getAge() {
+    public Integer getAge() {
         return age;
     }
 
@@ -116,7 +116,7 @@ public class OrderItem {
         return origin;
     }
 
-    public double getWeight() {
+    public Double getWeight() {
         return weight;
     }
 

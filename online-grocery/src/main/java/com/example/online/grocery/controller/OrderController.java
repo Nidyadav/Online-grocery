@@ -22,25 +22,12 @@ public class OrderController {
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
+
     @PostMapping(value = "/place_order", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> placeOrderAndGetReceipt(@RequestBody Order order) throws NotValidOrderException{
+    public ResponseEntity<String> placeOrderAndGetReceipt(@RequestBody Order order) throws NotValidOrderException {
         return ResponseEntity.ok(orderService.processOrder(order));
     }
-    @ExceptionHandler(NotValidOrderException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleNotValidOrderException(NotValidOrderException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-    @ExceptionHandler(ItemNotFoundException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleItemNotFoundException(ItemNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
+
     @GetMapping(path = "/discount_rules")
     public List<String> getDiscountRules() {
         return orderService.getAllDiscountRules();
@@ -49,5 +36,23 @@ public class OrderController {
     @GetMapping(path = "/prices")
     public Map<String, Double> getPrices() {
         return orderService.getPricesItemWise();
+    }
+
+    @ExceptionHandler(NotValidOrderException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleNotValidOrderException(NotValidOrderException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ItemNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleItemNotFoundException(ItemNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 }

@@ -89,9 +89,10 @@ public class OrderControllerTest {
         List<OrderItem> orderItems = new ArrayList<>();
         orderItems.add(new OrderItem("bread", 3, 3));
         order = new Order(orderItems);
-        String receipt = "Order details:\n" +
-                "3 x bread (3 days old): €2.00\n" +
-                "Total: €2.00";
+        String receipt = """
+                Order details:
+                3 x bread (3 days old): €2.00
+                Total: €2.00""";
         Mockito.when(orderService.processOrder(order)).thenReturn(receipt);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/place_order")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -110,7 +111,7 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isBadRequest())
                 .andExpect(result ->
-                        assertTrue(result.getResolvedException().getMessage().contains("No items found in the order hence it is not valid.")));
+                        assertTrue(Objects.requireNonNull(result.getResolvedException()).getMessage().contains("No items found in the order hence it is not valid.")));
         verify(orderService,times(1)).processOrder(any());
     }
 
@@ -125,7 +126,7 @@ public class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException().getMessage().contains("Item added is not valid.")));
+                .andExpect(result -> assertTrue(Objects.requireNonNull(result.getResolvedException()).getMessage().contains("Item added is not valid.")));
         verify(orderService,times(1)).processOrder(any());
     }
 
@@ -140,7 +141,7 @@ public class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException().getMessage().contains("Bread older than six days can not be added to the order.")));
+                .andExpect(result -> assertTrue(Objects.requireNonNull(result.getResolvedException()).getMessage().contains("Bread older than six days can not be added to the order.")));
         verify(orderService, times(1)).processOrder(any());
     }
 

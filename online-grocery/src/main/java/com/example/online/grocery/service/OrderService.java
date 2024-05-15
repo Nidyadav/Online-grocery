@@ -6,24 +6,23 @@ import com.example.online.grocery.entity.OrderItem;
 import com.example.online.grocery.exceptions.ItemNotFoundException;
 import com.example.online.grocery.exceptions.NotValidOrderException;
 import com.example.online.grocery.repository.ItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class OrderService {
-    @Autowired
-    ItemRepository itemRepository;
+
+    private final ItemRepository itemRepository;
 
     public OrderService(ItemRepository itemRepository) {
         this.itemRepository = itemRepository;
     }
 
-    public String processOrder(Order order) throws ItemNotFoundException ,NotValidOrderException,IllegalArgumentException{
+    public String processOrder(Order order) throws ItemNotFoundException, NotValidOrderException, IllegalArgumentException {
         double totalPrice = 0.0;
-        double discount = 0.0;
-        if(order.getOrderItems().size()==0){
+        double discount;
+        if (order.getOrderItems().isEmpty()) {
             throw new NotValidOrderException("No items found in the order hence it is not valid.");
         }
         Order modifiedOrder = updateOrderCombineSameItemsToGetDiscount(order);
@@ -31,22 +30,18 @@ public class OrderService {
             Optional<Item> item = itemRepository.findByName(orderItem.getName());
             Item validItem = item.orElseThrow(() -> new ItemNotFoundException("Item added is not valid."));
             orderItem.setPrice(validItem.getUnitPrice());
+
             if (validItem.getType() == Item.ProductType.VEGETABLE)
                 totalPrice += orderItem.getPrice() * (orderItem.getWeight() / 100);
             else
                 totalPrice += orderItem.getPrice() * orderItem.getQuantity();
-            if (validItem.getType() == Item.ProductType.BREAD) {
-                discount = calculateBreadDiscount(orderItem);
-                orderItem.setDiscount(discount);
-
-            } else if (validItem.getType() == Item.ProductType.VEGETABLE) {
-                discount = calculateDiscountForVegetable(orderItem);
-                orderItem.setDiscount(discount);
-            } else if (validItem.getType() == Item.ProductType.GERMAN_BEER||validItem.getType() == Item.ProductType.DUTCH_BEER||validItem.getType() == Item.ProductType.BELGIUM_BEER) {
-                discount = calculateDiscountForBeer(orderItem);
-                orderItem.setDiscount(discount);
+            switch (validItem.getType()) {
+                case BREAD -> discount = calculateBreadDiscount(orderItem);
+                case VEGETABLE -> discount = calculateDiscountForVegetable(orderItem);
+                case DUTCH_BEER, GERMAN_BEER, BELGIUM_BEER -> discount = calculateDiscountForBeer(orderItem);
+                default -> discount = 0.0;
             }
-
+            orderItem.setDiscount(discount);
             totalPrice -= discount;
         }
         modifiedOrder.setTotalPrice(totalPrice);
@@ -93,15 +88,21 @@ public class OrderService {
 
     private double calculateDiscountForBeer(OrderItem orderItem) {
         String origin = orderItem.getOrigin();
-        int quantity = orderItem.getQuantity();
-        if (quantity/6 >0 && origin.equals("Belgium")) {
-            return 3.0*(quantity/6);
-        } else if (quantity/6 >0 && origin.equals("Dutch")) {
-            return 2.0*(quantity/6);
-        } else if (quantity/6 >0 && origin.equals("German")) {
-            return 4.0*(quantity/6);
-        } else {
-            return 0.0;
+        int packOfSix = orderItem.getQuantity() / 6;
+        if (packOfSix <= 0) return 0.0;
+        switch (origin) {
+            case "Dutch" -> {
+                return 2.0 * packOfSix;
+            }
+            case "German" -> {
+                return 4.0 * packOfSix;
+            }
+            case "Belgium" -> {
+                return 3.0 * packOfSix;
+            }
+            default -> {
+                return 0.0;
+            }
         }
     }
 
@@ -122,70 +123,43 @@ public class OrderService {
     }
 
     private Order updateOrderCombineSameItemsToGetDiscount(Order order) {
-        int totalDutchBeerInOrder = 0;
-        int totalGermanBeerInOrder = 0;
-        int totalBelgiumBeerInOrder = 0;
+        Map<String, Integer> beerQuantities = new HashMap<>();
         double totalWeightOfVegetablesInOrder = 0.0;
+
         for (OrderItem orderItem : order.getOrderItems()) {
-            if (orderItem.getName().equals("German beer")||orderItem.getName().equals("Dutch beer")||orderItem.getName().equals("Belgium beer")) {
-                if (orderItem.getOrigin().equals("Dutch"))
-                    totalDutchBeerInOrder += orderItem.getQuantity();
-                if (orderItem.getOrigin().equals("German"))
-                    totalGermanBeerInOrder += orderItem.getQuantity();
-                if (orderItem.getOrigin().equals("Belgium"))
-                    totalBelgiumBeerInOrder += orderItem.getQuantity();
-            }
-            if (orderItem.getName().equals("vegetable")) {
-                totalWeightOfVegetablesInOrder += orderItem.getWeight();
+            switch (orderItem.getName()) {
+                case "Dutch beer", "German beer", "Belgium beer" ->
+                        beerQuantities.merge(orderItem.getOrigin(), orderItem.getQuantity(), Integer::sum);
+                case "vegetable" -> totalWeightOfVegetablesInOrder += orderItem.getWeight();
             }
         }
-        List<OrderItem> orderItems = order.getOrderItems();
-        if (totalWeightOfVegetablesInOrder > 0) {
-            List<OrderItem> itemsToBeCombined = new ArrayList<>();
-            for (OrderItem orderItem:orderItems) {
-                if (orderItem.getName().equals("vegetable")) {
-                    itemsToBeCombined.add(orderItem);
-                }
-            }
-            orderItems.removeAll(itemsToBeCombined);
-            orderItems.add(new OrderItem("vegetable", 0, 0, totalWeightOfVegetablesInOrder, ""));
-            order.setOrderItems(orderItems);
-        }
-        if (totalDutchBeerInOrder >= 6) {
-            List<OrderItem> itemsToBeCombined = new ArrayList<>();
-            for (OrderItem orderItem:orderItems) {
-                if (orderItem.getName().equals("Dutch beer")) {
-                    itemsToBeCombined.add(orderItem);
-                }
-            }
-            orderItems.removeAll(itemsToBeCombined);
-            orderItems.add(new OrderItem("Dutch beer", totalDutchBeerInOrder, 0, 0, "Dutch"));
-            order.setOrderItems(orderItems);
-        }
-        if (totalGermanBeerInOrder >= 6) {
-            List<OrderItem> itemsToBeCombined = new ArrayList<>();
-            for (OrderItem orderItem:orderItems) {
-                if (orderItem.getName().equals("German beer") && orderItem.getOrigin().equals("German")) {
-                    itemsToBeCombined.add(orderItem);
-                }
-            }
-            orderItems.removeAll(itemsToBeCombined);
-            orderItems.add(new OrderItem("German beer", totalGermanBeerInOrder, 0, 0, "German"));
-            order.setOrderItems(orderItems);
-        }
-        if (totalBelgiumBeerInOrder >= 6) {
-            List<OrderItem> itemsToBeCombined = new ArrayList<>();
-            for (OrderItem orderItem:orderItems) {
-                if (orderItem.getName().equals("Belgium beer") && orderItem.getOrigin().equals("Belgium"))
-                    itemsToBeCombined.add(orderItem);
-            }
-            if(itemsToBeCombined.size()>1) {
-                orderItems.removeAll(itemsToBeCombined);
-                orderItems.add(new OrderItem("Belgium beer", totalBelgiumBeerInOrder, 0, 0, "Belgium"));
-                order.setOrderItems(orderItems);
-            }
-        }
+
+        combineVegetableItems(order, totalWeightOfVegetablesInOrder);
+        combineBeerItems(order, "Dutch", beerQuantities.getOrDefault("Dutch", 0));
+        combineBeerItems(order, "German", beerQuantities.getOrDefault("German", 0));
+        combineBeerItems(order, "Belgium", beerQuantities.getOrDefault("Belgium", 0));
+
         return order;
+    }
+
+    private void combineVegetableItems(Order order, double totalWeight) {
+        if (totalWeight > 0) {
+            List<OrderItem> itemsToBeCombined = order.getOrderItems().stream()
+                    .filter(orderItem -> orderItem.getName().equals("vegetable")).toList();
+
+            order.getOrderItems().removeAll(itemsToBeCombined);
+            order.getOrderItems().add(new OrderItem("vegetable", 0, 0, totalWeight, ""));
+        }
+    }
+
+    private void combineBeerItems(Order order, String origin, int totalQuantity) {
+        if (totalQuantity >= 6) {
+            List<OrderItem> itemsToBeCombined = order.getOrderItems().stream()
+                    .filter(orderItem -> orderItem.getName().equals(origin + " beer") && orderItem.getOrigin().equals(origin)).toList();
+
+            order.getOrderItems().removeAll(itemsToBeCombined);
+            order.getOrderItems().add(new OrderItem(origin + " beer", totalQuantity, 0, 0, origin));
+        }
     }
 
 }
