@@ -1,8 +1,5 @@
 # Online-grocery
-online grocery shares endpoints: 
-to get list of items and prices.
-to show various discounts on items.
-to place order and generate reciept by correctly taking care of discounts.
+online grocery allows users to get list of items and prices, to show various discounts on items, and to place order and generate reciept by correctly taking care of discounts.
 
 Endpoints::
 1. GET /api/v1/prices: It gets the list of items and prices.
